@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import "./App.css";
 import Auth from "./component/auth";
-import { db } from "./config/firebase";
+import { db, auth } from "./config/firebase";
 import {
   getDocs,
   collection,
@@ -24,23 +24,28 @@ function App() {
   //2nd param is the key (name of the colection)
   const teamsCollectionRef = collection(db, "Formula 1");
   /////////////////////////////////////////////////////////////////////
-  useEffect(() => {
-    const unsubscribe = onSnapshot(
-      teamsCollectionRef,
-      (snapshot) => {
-        const updatedData = snapshot.docs.map((doc) => ({
-          ...doc.data(),
-          id: doc.id,
-        }));
-        setTeamList(updatedData);
-      },
-      (error) => {
-        console.error("Error:", error);
-      }
-    );
 
-    return () => unsubscribe();
+  async function GetTeamList() {
+    try {
+      const data = await getDocs(teamsCollectionRef);
+
+      // getting the exact data that we want from the response
+      const filteredData = data.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id, // creating an  id property
+      }));
+      setTeamList(filteredData);
+
+      //console.log(filteredData);
+    } catch (err) {
+      console.error(err);
+    }
+  }
+  ////////////////////////////////////////////////////////////////////
+  useEffect(() => {
+    GetTeamList();
   }, []);
+
   ////////////////////////////////////////////////////////////////////
 
   async function onSubmitTeam(e) {
@@ -54,6 +59,7 @@ function App() {
         Driver1: driver1,
         Driver2: driver2,
         Team: team,
+        userId: auth?.currentUser?.uid, // dif. pra auth.uid
       });
 
       // if it got here, it's vecause everything is alright
@@ -63,6 +69,8 @@ function App() {
       setDriver1("");
       setDriver2("");
       setTeam("");
+
+      GetTeamList();
     } catch (err) {
       console.error("❌ Error when adding the new data:", err);
       alert("Error when adding the new data. Try it again");
@@ -73,12 +81,14 @@ function App() {
     // grab the doc you want delete (function doc)
     const teamDoc = doc(db, "Formula 1", id);
     await deleteDoc(teamDoc);
+    GetTeamList();
   }
   ////////////////////////////////////////////////////////////////////
   async function updateTeamName(id) {
     // grab the doc you want delete (function doc)
     const teamDoc = doc(db, "Formula 1", id);
     await updateDoc(teamDoc, { Team: updatedTeam });
+    GetTeamList();
   }
   ////////////////////////////////////////////////////////////////////
   return (
