@@ -2,7 +2,15 @@ import { useEffect, useState } from "react";
 import "./App.css";
 import Auth from "./component/auth";
 import { db } from "./config/firebase";
-import { getDocs, collection, addDoc, onSnapshot } from "firebase/firestore";
+import {
+  getDocs,
+  collection,
+  addDoc,
+  onSnapshot,
+  deleteDoc,
+  updateDoc,
+  doc,
+} from "firebase/firestore";
 
 function App() {
   //state to keep track of the list of F1 Teams
@@ -10,6 +18,7 @@ function App() {
   const [driver1, setDriver1] = useState("");
   const [driver2, setDriver2] = useState("");
   const [team, setTeam] = useState("");
+  const [updatedTeam, setUpdatedTeam] = useState("");
 
   //Reference for the collection. Put it inside the getDocs method
   //2nd param is the key (name of the colection)
@@ -60,6 +69,18 @@ function App() {
     }
   }
   ////////////////////////////////////////////////////////////////////
+  async function deleteTeam(id) {
+    // grab the doc you want delete (function doc)
+    const teamDoc = doc(db, "Formula 1", id);
+    await deleteDoc(teamDoc);
+  }
+  ////////////////////////////////////////////////////////////////////
+  async function updateTeamName(id) {
+    // grab the doc you want delete (function doc)
+    const teamDoc = doc(db, "Formula 1", id);
+    await updateDoc(teamDoc, { Team: updatedTeam });
+  }
+  ////////////////////////////////////////////////////////////////////
   return (
     <div className="App">
       <Auth />
@@ -94,6 +115,16 @@ function App() {
             <p>{team.Team}</p>
             <p>{team.Driver1}</p>
             <p>{team.Driver2}</p>
+            <button onClick={() => deleteTeam(team.id)}>Delete</button>
+            <br />
+            <input
+              type="text"
+              placeholder="New Team"
+              onChange={(e) => setUpdatedTeam(e.target.value)}
+            />
+            <button onClick={() => updateTeamName(team.id)}>
+              Update Team Name
+            </button>
           </div>
         ))}
       </div>
